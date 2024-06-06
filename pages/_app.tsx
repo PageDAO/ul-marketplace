@@ -36,11 +36,27 @@ import ReferralContextProvider, {
 } from 'context/ReferralContextProvider'
 import { chainPaymentTokensMap } from 'utils/paymentTokens'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider, http } from 'wagmi'
+import { WagmiProvider, http, createConfig } from 'wagmi'
 import { chainIdToAlchemyNetworkMap } from 'utils/chainIdToAlchemyNetworkMap'
 import { _transports } from '@rainbow-me/rainbowkit/dist/config/getDefaultConfig'
-import { Chain, mainnet } from 'viem/chains'
+import { Chain, mainnet, polygon, evmos, moonbeam, base, optimism } from 'viem/chains'
 
+import {
+  DynamicContextProvider,
+  DynamicWidget,
+} from '@dynamic-labs/sdk-react-core'
+import { DynamicWagmiConnector } from '@dynamic-labs/wagmi-connector'
+import { CosmosWalletConnectors } from '@dynamic-labs/cosmos'
+import { EthereumWalletConnectors } from '@dynamic-labs/ethereum'
+import { SolanaWalletConnectors } from '@dynamic-labs/solana'
+
+const config = createConfig({
+  chains: [mainnet, polygon, base, optimism, evmos, moonbeam],
+  multiInjectedProviderDiscovery: false,
+  transports: {
+    [mainnet.id]: http(),
+  },
+})
 //CONFIGURABLE: Use nextjs to load your own custom font: https://nextjs.org/docs/basic-features/font-optimization
 const inter = Inter({
   subsets: ['latin'],
@@ -81,6 +97,115 @@ const wagmiConfig = getDefaultConfig({
 
 const queryClient = new QueryClient()
 
+const evmNetworks = [
+  {
+    blockExplorerUrls: ["https://etherscan.io/"],
+    chainId: 1,
+    chainName: "Ethereum Mainnet",
+    iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
+    name: "Ethereum",
+    nativeCurrency: {
+      decimals: 18,
+      name: "Ether",
+      symbol: "ETH",
+    },
+    networkId: 1,
+
+    rpcUrls: ["https://mainnet.infura.io/v3/"],
+    vanityName: "ETH Mainnet",
+  },
+  {
+    blockExplorerUrls: ["https://polygonscan.com/"],
+    chainId: 137,
+    chainName: "Matic Mainnet",
+    iconUrls: ["https://app.dynamic.xyz/assets/networks/polygon.svg"],
+    name: "Polygon",
+    nativeCurrency: {
+      decimals: 18,
+      name: "MATIC",
+      symbol: "MATIC",
+    },
+    networkId: 137,
+    rpcUrls: ["https://polygon-rpc.com"],
+    vanityName: "Polygon",
+  },
+  {
+    blockExplorerUrls: ["https://optimisticscan.io/"],
+    chainId: 10,
+    chainName: "optimism",
+    iconUrls: ["https://icons.llamao.fi/icons/chains/rsz_optimism.jpg"],
+    name: "Optimism",
+    nativeCurrency: {
+      decimals: 18,
+      name: "Ether",
+      symbol: "ETH",
+    },
+    networkId: 10,
+    rpcUrls: ["https://mainnet.optimism.io"],
+    vanityName: "Optimism",
+  },
+  {
+    blockExplorerUrls: ["https://basescan.io/"],
+    chainId: 8453,
+    chainName: "base",
+    iconUrls: ["https://icons.llamao.fi/icons/chains/rsz_base.jpg"],
+    name: "Base",
+    nativeCurrency: {
+      decimals: 18,
+      name: "Ether",
+      symbol: "ETH",
+    },
+    networkId: 8453,
+    rpcUrls: ["https://base.drpc.org"],
+    vanityName: "Base",
+  },
+  {
+    blockExplorerUrls: ["https://explorer.degen.tips"],
+    chainId: 666666666,
+    chainName: "degen",
+    iconUrls: ["https://basescan.org/token/images/degentips_32.png"],
+    name: "Degen",
+    nativeCurrency: {
+      decimals: 18,
+      name: "Ether",
+      symbol: "ETH",
+    },
+    networkId: 666666666,
+    rpcUrls: ["https://rpc.degen.tips"],
+    vanityName: "Degen",
+  },
+  {
+    blockExplorerUrls: ["https://escan.live"],
+    chainId: 9001,
+    chainName: "evmos",
+    iconUrls: ["https://icons.llamao.fi/icons/chains/rsz_evmos.jpg"],
+    name: "Evmos",
+    nativeCurrency: {
+      decimals: 18,
+      name: "Ether",
+      symbol: "ETH",
+    },
+    networkId: 9001,
+    rpcUrls: ["https://evmos-mainnet.public.blastapi.io"],
+    vanityName: "Evmos",
+  },
+  {
+    blockExplorerUrls: ["https://moonscan.io"],
+    chainId: 1284,
+    chainName: "moonbeam",
+    iconUrls: ["https://icons.llamao.fi/icons/chains/rsz_moonbeam.jpg"],
+    name: "Moonbeam",
+    nativeCurrency: {
+      decimals: 18,
+      name: "Ether",
+      symbol: "ETH",
+    },
+    networkId: 1284,
+    rpcUrls: ["https://rpc.api.moonbeam.network"],
+    vanityName: "Moonbeam",
+  },
+];
+
 //CONFIGURABLE: Here you can override any of the theme tokens provided by RK: https://docs.reservoir.tools/docs/reservoir-kit-theming-and-customization
 const reservoirKitThemeOverrides = {
   headlineFont: inter.style.fontFamily,
@@ -91,28 +216,43 @@ const reservoirKitThemeOverrides = {
 
 function AppWrapper(props: AppProps & { baseUrl: string }) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      value={{
-        dark: darkTheme.className,
-        light: 'light',
+    <DynamicContextProvider
+      settings={{
+        // Find your environment id at https://app.dynamic.xyz/dashboard/developer
+        environmentId: '07ee2707-6b23-4905-a7d5-f6d7331cd531',
+        walletConnectors: [
+          CosmosWalletConnectors,
+          EthereumWalletConnectors,
+          SolanaWalletConnectors,
+        ],
+        evmNetworks,
       }}
     >
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
-          <ChainContextProvider>
-            <AnalyticsProvider>
-              <ErrorTrackingProvider>
-                <ReferralContextProvider>
-                  <MyApp {...props} />
-                </ReferralContextProvider>
-              </ErrorTrackingProvider>
-            </AnalyticsProvider>
-          </ChainContextProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </ThemeProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        value={{
+          dark: darkTheme.className,
+          light: 'light',
+        }}
+      >
+        <WagmiProvider config={wagmiConfig}>
+          <QueryClientProvider client={queryClient}>
+            <ChainContextProvider>
+              <AnalyticsProvider>
+                <ErrorTrackingProvider>
+                  <ReferralContextProvider>
+                    <DynamicWagmiConnector suppressChainMismatchError>
+                      <MyApp {...props} />
+                    </DynamicWagmiConnector>
+                  </ReferralContextProvider>
+                </ErrorTrackingProvider>
+              </AnalyticsProvider>
+            </ChainContextProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
+      </ThemeProvider>
+    </DynamicContextProvider>
   )
 }
 

@@ -66,7 +66,7 @@ const Navbar = () => {
           <Link href={`/${routePrefix}`}>
             <Box css={{ width: 46, cursor: 'pointer' }}>
               <Image
-                src="/reservoirLogo.svg"
+                src="/page.svg"
                 width={36}
                 height={36}
                 alt="Reservoir"
@@ -115,7 +115,7 @@ const Navbar = () => {
           <Link href={`/${routePrefix}`}>
             <Box css={{ cursor: 'pointer' }}>
               <Image
-                src="/reservoirLogo.svg"
+                src={"/page.svg"}
                 width={36}
                 height={36}
                 alt="Reservoir"
